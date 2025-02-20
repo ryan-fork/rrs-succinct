@@ -613,7 +613,7 @@ mod tests {
             Some(String::from("unimp"))
         );
 
-        //cargo test --package rrs-succinct --lib -- instruction_string_outputter::tests::test_insn_string_output --exact --show-output 
+        //cargo test --package rrs_lib --lib -- instruction_string_outputter::tests::test_insn_string_output --exact --show-output 
         assert_eq!(  //wcctest
             process_instruction(&mut outputter, test_insns[57]), //0x40684b3
             Some(String::from("sqr x9, x13"))
