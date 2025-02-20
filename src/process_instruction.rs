@@ -7,15 +7,16 @@ use super::InstructionProcessor;
 
 fn process_opcode_op<T: InstructionProcessor>(
     processor: &mut T,
-    insn_bits: u32,
+    insn_bits: u32,             //0x034684b3
 ) -> Option<T::InstructionResult> {
     let dec_insn = instruction_formats::RType::new(insn_bits);
 
     match dec_insn.funct3 {
         0b000 => match dec_insn.funct7 {
             0b000_0000 => Some(processor.process_add(dec_insn)),
-            0b000_0001 => Some(processor.process_mul(dec_insn)),
-            0b010_0000 => Some(processor.process_sub(dec_insn)),
+            0b000_0001 => Some(processor.process_mul(dec_insn)),//1
+            0b000_0010 => Some(processor.process_sqr(dec_insn)), //2 wcc
+            0b010_0000 => Some(processor.process_sub(dec_insn)), //32
             _ => None,
         },
         0b001 => match dec_insn.funct7 {
@@ -165,7 +166,7 @@ fn process_opcode_system<T: InstructionProcessor>(
 /// the result it produces.
 ///
 /// Returns `None` if instruction doesn't decode into a valid instruction.
-pub fn process_instruction<T: InstructionProcessor>(
+pub fn process_instruction<T: InstructionProcessor>( //0x034684b3
     processor: &mut T,
     insn_bits: u32,
 ) -> Option<T::InstructionResult> {

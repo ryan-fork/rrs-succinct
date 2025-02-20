@@ -81,6 +81,15 @@ impl<'a, M: Memory> InstructionExecutor<'a, M> {
         self.hart_state.write_register(dec_insn.rd, result);
     }
 
+    fn execute_reg_reg_one_op<F>(&mut self, dec_insn: instruction_formats::RType, op: F)
+    where
+        F: Fn(u32) -> u32,
+    {//wcc //单目运算符
+        let a = self.hart_state.read_register(dec_insn.rs1);
+        let result = op(a);
+        self.hart_state.write_register(dec_insn.rd, result);
+    }
+
     fn execute_reg_imm_op<F>(&mut self, dec_insn: instruction_formats::IType, op: F)
     where
         F: Fn(u32, u32) -> u32,
@@ -354,6 +363,21 @@ macro_rules! make_alu_op_reg_fn {
     };
 }
 
+macro_rules! make_alu_op_reg_one_fn {
+    ($name:ident, $op_fn:expr) => {
+        paste! {
+            fn [<process_ $name>](
+                &mut self,
+                dec_insn: instruction_formats::RType
+            ) -> Self::InstructionResult {
+                self.execute_reg_reg_one_op(dec_insn, $op_fn);
+
+                Ok(false)
+            }
+        }
+    };
+}
+
 macro_rules! make_alu_op_imm_fn {
     ($name:ident, $op_fn:expr) => {
         paste! {
@@ -552,6 +576,7 @@ impl<'a, M: Memory> InstructionProcessor for InstructionExecutor<'a, M> {
     make_alu_op_reg_fn! {mulh, |a, b| (sign_extend_u32(a).wrapping_mul(sign_extend_u32(b)) >> 32) as u32}
     make_alu_op_reg_fn! {mulhu, |a, b| (((a as u64).wrapping_mul(b as u64)) >> 32) as u32}
     make_alu_op_reg_fn! {mulhsu, |a, b| (sign_extend_u32(a).wrapping_mul(b as i64) >> 32) as u32}
+    make_alu_op_reg_one_fn! {sqr, |a| a.wrapping_mul(a)} //wcc  process_sqr
 
     make_alu_op_reg_fn! {div, |a, b| if b == 0 {u32::MAX} else {((a as i32).wrapping_div(b as i32)) as u32}}
     make_alu_op_reg_fn! {divu, |a, b| if b == 0 {u32::MAX} else {a / b}}

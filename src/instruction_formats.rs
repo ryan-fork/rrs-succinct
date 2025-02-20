@@ -30,13 +30,13 @@ pub struct RType {
 }
 
 impl RType {
-    pub fn new(insn: u32) -> RType {
+    pub fn new(insn: u32) -> RType {    //0x034684b3(mul)            0x40e18ab3(sub)                0x40684b3(sqr)
         RType {
-            funct7: (insn >> 25) & 0x7f,
-            rs2: ((insn >> 20) & 0x1f) as usize,
-            rs1: ((insn >> 15) & 0x1f) as usize,
-            funct3: (insn >> 12) & 0x7,
-            rd: ((insn >> 7) & 0x1f) as usize,
+            funct7: (insn >> 25) & 0x7f,                //1                                 32                                                  2
+            rs2: ((insn >> 20) & 0x1f) as usize,    //20                              14                                                  0
+            rs1: ((insn >> 15) & 0x1f) as usize,    //13                               3                                                   13
+            funct3: (insn >> 12) & 0x7,                 //0                                  0                                                   0
+            rd: ((insn >> 7) & 0x1f) as usize,       //9                                  21                                                 9
         }
     }
 }

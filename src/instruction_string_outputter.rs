@@ -31,6 +31,21 @@ pub struct InstructionStringOutputter {
 }
 
 // Macros to produce string outputs for various different instruction types
+macro_rules! string_out_for_alu_one_reg_op {
+    //wcc //单目运算符
+    ($name:ident) => {
+        paste! {
+            fn [<process_ $name>](
+                &mut self,
+                dec_insn: instruction_formats::RType
+            ) -> Self::InstructionResult {
+                format!("{} x{}, x{}", stringify!($name), dec_insn.rd, dec_insn.rs1)
+            }
+        }
+    };
+}
+
+// Macros to produce string outputs for various different instruction types
 macro_rules! string_out_for_alu_reg_op {
     ($name:ident) => {
         paste! {
@@ -240,6 +255,7 @@ impl InstructionProcessor for InstructionStringOutputter {
     }
 
     string_out_for_alu_reg_ops! {mul, mulh, mulhu, mulhsu, div, divu, rem, remu}
+    string_out_for_alu_one_reg_op! {sqr} //wcc process_sqr
 
     fn process_fence(&mut self, _dec_insn: instruction_formats::IType) -> Self::InstructionResult {
         String::from("fence")
@@ -294,14 +310,14 @@ mod tests {
 
         let test_insns = vec![
             0x07b60893, 0x24dba193, 0x06f63813, 0x14044f13, 0x7804e893, 0x1ea6fa13, 0x00511693,
-            0x00f45713, 0x417dd213, 0x01798733, 0x40e18ab3, 0x009e1533, 0x00c02fb3, 0x014ab933,
+            0x00f45713, 0x417dd213, 0x01798733, 0x40e18ab3/*10 sub*/, 0x009e1533, 0x00c02fb3, 0x014ab933,
             0x0175cd33, 0x014350b3, 0x41a753b3, 0x00566fb3, 0x01de7db3, 0xdeadb637, 0x00064897,
             0x04c004ef, 0x100183e7, 0x04d38263, 0x05349063, 0x03774e63, 0x03dbdc63, 0x035e6a63,
             0x0398f863, 0x04c18983, 0x07841b83, 0x1883a403, 0x03af4b03, 0x15acd883, 0x0d320923,
-            0x18061323, 0x0b382523, 0x034684b3, 0x03679f33, 0x0324bbb3, 0x03d9a233, 0x03f549b3,
+            0x18061323, 0x0b382523, 0x034684b3/*37 mul*/, 0x03679f33, 0x0324bbb3, 0x03d9a233, 0x03f549b3,
             0x02ee5133, 0x02a6e9b3, 0x02c976b3, 0xabc0000f, 0x30069573, 0x3411a973, 0x34483ff3,
             0x3409d9f3, 0x30556c73, 0x3046faf3, 0x00000073, 0x00100073, 0x10500073, 0x30200073,
-            0xc0001073,
+            0xc0001073, 0x40684b3/*57 sqr */
         ];
 
         assert_eq!(
@@ -356,7 +372,7 @@ mod tests {
 
         assert_eq!(
             process_instruction(&mut outputter, test_insns[10]),
-            Some(String::from("sub x21, x3, x14"))
+            Some(String::from("sub x21, x3, x14"))  //0x40e18ab3
         );
 
         assert_eq!(
@@ -595,6 +611,12 @@ mod tests {
         assert_eq!(
             process_instruction(&mut outputter, test_insns[56]),
             Some(String::from("unimp"))
+        );
+
+        //cargo test --package rrs-succinct --lib -- instruction_string_outputter::tests::test_insn_string_output --exact --show-output 
+        assert_eq!(  //wcctest
+            process_instruction(&mut outputter, test_insns[57]), //0x40684b3
+            Some(String::from("sqr x9, x13"))
         );
     }
 }
